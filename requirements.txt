@@ -2,3 +2,4 @@ ntlk
 pandas
 tensorflow
 scikit-learn
+numpy
