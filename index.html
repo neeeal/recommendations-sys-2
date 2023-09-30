@@ -7,6 +7,27 @@
     <title>Document</title>
 </head>
 <body>
+	<div id="data"></div>
     <script type="module" src="script.js"></script>
+	<script>
+		document.addEventListener('DOMContentLoaded', function () {
+    const dataDiv = document.getElementById('data');
+
+
+    const apiUrl = 'http://localhost:3000/api/data';
+
+   
+    fetch(apiUrl)
+        .then(response => response.json())
+        .then(data => {
+           
+            dataDiv.textContent = JSON.stringify(data, null, 2);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+});
+
+	</script>
 </body>
 </html>
