@@ -1,5 +1,7 @@
-ntlk
+nltk
 pandas
 tensorflow
 scikit-learn
 numpy
+flask
+flask-cors

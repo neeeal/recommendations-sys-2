@@ -36,16 +36,17 @@ def get_movie_recommendations(movie_title, similarity_matrix, num_recommendation
     similar_movies = sorted(similar_movies, key=lambda x: x[1], reverse=True)
     similar_movies = similar_movies[1:num_recommendations + 1]  # Exclude the movie itself
     recommended_movies = [data['names'].iloc[i[0]] for i in similar_movies]
-    return recommended_movies
+    movies_descriptions = [i['overview'] for i in data]
+    return recommended_movies, movies_descriptions
 
 @app.route('/recommend', methods=['POST'])
 def recommend_movies():
     data = request.get_json()
     movie_title = data['movie_title']
 
-    recommendations = get_movie_recommendations(movie_title, cosine_sim)
+    recommendations,descriptions = get_movie_recommendations(movie_title, cosine_sim)
     
-    return jsonify(recommendations)
+    return jsonify({'reccomendations':recommendations,'descriptions':descriptions})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
