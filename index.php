@@ -1,20 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Movie Recommendations</title>
 </head>
 <body>
-    <div>
-        <form method="POST" action="">
-            <label for="movie-title">Enter Movie Title:</label>
-            <input type="text" name="movie_title" id="movie-title" placeholder="Avatar: The Way of Water">
-            <input type="submit" name="get-recommendations" value="Get Recommendations">
-        </form>
-    </div>
-    <div id="data">
-        <?php
+    <form method="POST" action="">
+        <label for="movie-title">Enter Movie Title:</label>
+        <input type="text" name="movie_title" id="movie-title" placeholder="Avatar: The Way of Water">
+        <input type="submit" name="get-recommendations" value="Get Recommendations">
+    </form>
+    <div id="data"></div>
+
+<!-- #1 working method for fetching recommendation -->
+    <?php
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $movie_title = $_POST['movie_title'];
 
@@ -42,7 +40,37 @@
                 echo "No recommendations found.";
             }
         }
-        ?>
-    </div>
+    ?>
+    <!-- #2 working method for fetching recommendation -->
+    <!-- <script>
+        document.getElementById('get-recommendations').addEventListener('click', function () {
+            const movieTitle = document.getElementById('movie-title').value;
+            document.getElementById('data').innerHTML = "Loading...";
+
+            fetch('http://127.0.0.1:5000/recommend', {
+                method: 'POST',
+                body: JSON.stringify({ movie_title: movieTitle }),
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                recommendations=data
+                // Render recommendations using PHP in the HTML
+                document.getElementById('data').innerHTML = data.length > 0
+                    ? "Recommendations:<br>" + data.join("<br>")
+                    : "No recommendations found.";
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script> -->
 </body>
 </html>
