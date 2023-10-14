@@ -4,10 +4,18 @@ import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 from nltk.corpus import stopwords
 import nltk
+import pymysql
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for your Flask app
-
+# MySQL configuration
+db = pymysql.connect(
+    host='localhost',
+    user='root',
+    password='',
+    db='movie_sys',
+    cursorclass=pymysql.cursors.DictCursor  # Fetch results as dictionaries
+)
 # Load and preprocess the data
 data = pd.read_csv('datasets/imdb_movies.csv')
 summary = data['overview'].values
@@ -50,6 +58,25 @@ def recommend_movies():
     recommendations = get_movie_recommendations(movie_title, cosine_sim)
     
     return jsonify(recommendations)
+
+#try mysql connection
+@app.route('/recommend_movies', methods=['GET'])
+def recommend():
+    try:
+        with db.cursor() as cursor:
+            # Execute an SQL query to fetch the list of movies
+            cursor.execute('SELECT * FROM movies')
+            
+            # Fetch all the movie records
+            data = cursor.fetchall()
+            print(data)
+    finally:
+        db.close()  # Close the database connection
+
+    # Convert the MySQL result to a list of dictionaries
+    movies = [{'title': row['title'], 'description': row['summary']} for row in data]
+
+    return jsonify(movies)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
