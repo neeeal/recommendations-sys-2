@@ -14,7 +14,7 @@ db = pymysql.connect(
     user='root',
     password='',
     db='movie_sys',
-    cursorclass=pymysql.cursors.DictCursor  # Fetch results as dictionaries
+    cursorclass=pymysql.cursors.DictCursor  
 )
 # Load and preprocess the data
 data = pd.read_csv('datasets/imdb_movies.csv')
@@ -37,6 +37,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 vectorizer = CountVectorizer().fit_transform(summary)
 cosine_sim = cosine_similarity(vectorizer)
 
+
 # Function to get movie recommendations
 def get_movie_recommendations(movie_title, similarity_matrix, num_recommendations=10):
     movie_idx = data[data['names'] == movie_title].index[0]
@@ -50,33 +51,32 @@ def get_movie_recommendations(movie_title, similarity_matrix, num_recommendation
         recommended_movies.append({'title': recommended_movie_title, 'description': movies_descriptions})
     return recommended_movies
 
-@app.route('/recommend', methods=['POST'])
+@app.route('/recommend', methods = ['POST', 'GET'])
 def recommend_movies():
-    data = request.get_json()
-    movie_title = data['movie_title']
+    if request.method == 'POST':
+        data = request.get_json()
+        movie_title = data['movie_title']
 
-    recommendations = get_movie_recommendations(movie_title, cosine_sim)
+        recommendations = get_movie_recommendations(movie_title, cosine_sim)
+        
+        return jsonify(recommendations)
     
-    return jsonify(recommendations)
+    if request.method == 'GET':
+        try:
+            with db.cursor() as cursor:
+                # Execute an SQL query to fetch the list of movies
+                cursor.execute('SELECT * FROM movies')
+                
+                # Fetch all the movie records
+                data = cursor.fetchall()
+                print(data)
+        finally:
+            db.close()  # Close the database connection
 
-#try mysql connection
-@app.route('/recommend_movies', methods=['GET'])
-def recommend():
-    try:
-        with db.cursor() as cursor:
-            # Execute an SQL query to fetch the list of movies
-            cursor.execute('SELECT * FROM movies')
-            
-            # Fetch all the movie records
-            data = cursor.fetchall()
-            print(data)
-    finally:
-        db.close()  # Close the database connection
+        # Convert the MySQL result to a list of dictionaries
+        movies = [{'title': row['names'], 'description': row['overview']} for row in data]
 
-    # Convert the MySQL result to a list of dictionaries
-    movies = [{'title': row['title'], 'description': row['summary']} for row in data]
-
-    return jsonify(movies)
+        return jsonify(movies)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

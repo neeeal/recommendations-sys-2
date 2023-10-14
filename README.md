@@ -20,6 +20,8 @@ Follow these steps to clone and run the application on your local machine.
 
     Move the index.php file to your XAMPP's web root directory (e.g., C:\xampp\htdocs\recommendations-sys or your folder path).
 
+    Import imdb_movies.sql to your database named movie_sys
+
     Start your XAMPP server.
 
     Open a web browser and access the PHP application at http://localhost/recommendations-sys/.
