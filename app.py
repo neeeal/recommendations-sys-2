@@ -59,13 +59,13 @@ def recommend_mysql_movies():
         
         with db.cursor() as cursor:
             # Execute an SQL query to fetch the list of movies
-            cursor.execute('SELECT * FROM movies')
+            cursor.execute('SELECT * FROM movies limit 20')
             
             # Fetch all the movie records
             data = cursor.fetchall()
 
         # Convert the MySQL result to a list of dictionaries
-        movies = [{'title': row['names'], 'description': row['overview']} for row in data]
+        movies = [{'title': row['names'], 'description': row['overview'],  'date': row['date_x'],  'genre': row['genre']} for row in data]
 
         return jsonify(movies)
             
