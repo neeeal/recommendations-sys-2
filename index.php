@@ -7,10 +7,11 @@
 <body>
     <!-- Fetch and display using Alpine.js -->
     <div x-data="{
+        selectedMovie:null,
         movie: null,
         movieTitle: '',
         async getMovies() {
-            const response = await fetch('http://127.0.0.1:5000/', {
+            const response = await fetch('http://127.0.0.1:5000/movies', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -22,7 +23,7 @@
         async getRecommendations(title,id) {
             console.log(id,'fds', title)
             if (title) {
-                const response = await fetch('http://127.0.0.1:5000/', {
+                const response = await fetch('http://127.0.0.1:5000/movies', {
                     method: 'POST',
                     body: JSON.stringify({ 
                         movie_title: title,
@@ -34,15 +35,42 @@
                 });
                
                 const json = await response.json();
-                console.log(json[1].data)
-                this.movie = json[1].data;
+                this.movie = json.data;
+                this.selectedMovie=json.movie;
             }
+        },
+        async search(title){
+            const response = await fetch(`http://127.0.0.1:5000/movies/${title}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+               
+                const json = await response.json();
+                this.movie = json;
+         
         }
     }" x-init="getMovies()">
-        <!-- Textbox for input movie title -->
         <input x-model="movieTitle" type="text" placeholder="Enter movie title">
-        <button @click="getRecommendations(movieTitle)">Get Reco</button>
-        <!-- Display title, description, genre, and date using a for loop -->
+        <button @click="search(movieTitle);selectedMovie=null">Search na di maganda</button>
+
+        <template x-if="selectedMovie != null">
+            <div>
+                <h1 x-text="selectedMovie.title"></h1>
+                <p x-text="selectedMovie.movie_id"></p>
+                <p ></p>
+                <p x-text="selectedMovie.description"></p>
+            </div>
+        </template>
+
+        <template x-if="selectedMovie != null">
+            <h3>More Like <span x-text="selectedMovie.title"></span></h3>
+        </template>
+
+        <template x-if="selectedMovie==null">
+            <h1>Browse IMDB Movies</h1>
+        </template>
         <template x-for="(item, index) in movie" :key="index">
             <div>
                 <button x-text="item.title" @click="getRecommendations(item.title, item.movie_id)"></button>
@@ -50,7 +78,10 @@
                 <p x-text="item.movie_id"></p>
                 <p x-text="item.genre"></p>
                 <p x-text="item.date"></p>
-                <p x-text="item.score"></p>
+                <template x-if="selectedMovie!=null">
+                    <p x-text="Math.floor(parseFloat(item.score) * 100) + '%'"></p>
+                </template>
+               
             </div>
         </template>
     </div>

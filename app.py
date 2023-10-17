@@ -26,8 +26,8 @@ with db.cursor() as cursor:
     movie_overviews_orig = [row['overview'] for row in data]
     movie_id = [row['movie_id'] for row in data]
     movie_overviews = [row['overview'] for row in data]
+    movie_titles = [row['names'] for row in data] 
     
-    movie_titles = [row['names'] for row in data]  # Change 'names' to 'titl
 
 # Preprocess the movie overviews
     nltk.download("stopwords")
@@ -46,28 +46,71 @@ with db.cursor() as cursor:
     vectorizer = CountVectorizer().fit_transform(movie_overviews)
     cosine_sim = cosine_similarity(vectorizer)
 
-@app.route('/', methods=['POST','GET'])
+# Function to get movie recommendations
+def get_movie_recommendations( movie_title, similarity_matrix):
+    if type(movie_title) == str:
+        movie_idx = movie_titles.index(movie_title)
+    else: 
+        movie_idx = movie_title
+    similar_movies = list(enumerate(similarity_matrix[movie_idx]))
+    similar_movies = sorted(similar_movies, key=lambda x: x[1], reverse=True)[1:]
+    recommended_movies = []
+    
+    # Calculate a recommendation score based on similarity (cosine similarity)
+    for i in similar_movies:
+        if(i[1]< 0.18):
+            break
+        recommended_movie_title = movie_titles[i[0]]
+        movie_description = movie_overviews_orig[i[0]]
+        recommended_movies.append({'title': recommended_movie_title, 'description': movie_description,'movie_id': movie_id[i[0]], 'score':i[1]})
+
+    return recommended_movies
+
+
+@app.route('/movies/<string:movieTitle>', methods=['GET'])
+def get_movies_by_title(movieTitle):
+    with db.cursor() as cursor:
+        # Execute an SQL query to fetch the list of movies matching the provided title
+        cursor.execute('SELECT * FROM movies WHERE names LIKE %s', (f"%{movieTitle}%",))  
+        
+        # Fetch all the movie records
+        data = cursor.fetchall()
+
+        movies = [{'movie_id': row['movie_id'], 'title': row['names'], 'description': row['overview'], 'date': row['date_x'], 'genre': row['genre']} for row in data]
+
+        return jsonify(movies)
+
+@app.route('/movies', methods=['POST','GET'])
 def recommend_mysql_movies():
     if request.method == 'POST':
         data = request.get_json()
         movie_title = data['movie_title']
         movie_id = data['movie_id']
-
-        # Assuming you have a valid user ID and movie ID to insert
+        
         with db.cursor() as cursor:
+            cursor.execute('SELECT * FROM movies WHERE movie_id = %s', (movie_id))
+            data = cursor.fetchall()
+            movies = {'movie_id': data[0]['movie_id'], 'title': data[0]['names'], 'description': data[0]['overview'], 'date': data[0]['date_x'], 'genre': data[0]['genre'] }
+
             try:
-                # Correct the SQL query and placeholders for user ID and movie ID
                 cursor.execute('INSERT INTO WatchedMovies (UserID, movie_id) VALUES (%s, %s)', (1, movie_id))
-                db.commit()  # Commit the transaction
+                db.commit()
             except Exception as e:
                 return jsonify({'message': 'Error inserting watched movie.'}), 500
+
 
         recommendations = get_movie_recommendations(movie_title, cosine_sim)
 
         if recommendations:
-            return jsonify([{'message': 'Successfully saved to watched history.'},{'data': recommendations}])
+            return jsonify(
+                {   'message': 'Successfully saved to watched history.',
+                    'movie':movies,
+                    'data': recommendations
+                    })
         else:
-            return jsonify({'message': 'No recommendations found.'}), 404
+            return jsonify({'message': 'No recommendations found.', 'movie':movies,
+                    'data': recommendations
+                    })
     
     if request.method == 'GET':
         
@@ -83,21 +126,15 @@ def recommend_mysql_movies():
         return jsonify(movies)
             
 
-# Function to get movie recommendations
-def get_movie_recommendations( movie_title, similarity_matrix, num_recommendations=20):
-    movie_idx = movie_titles.index(movie_title)
-    similar_movies = list(enumerate(similarity_matrix[movie_idx]))
-    similar_movies = sorted(similar_movies, key=lambda x: x[1], reverse=True)
-    similar_movies = similar_movies[1:num_recommendations + 1]  # Exclude the movie itself
-    recommended_movies = []
+'''
+data = query_data
+recommendations = []
+for item in data:
+    id = item.id
+    recco = get_movie_recc(id)
+    recommendations.append(recco)
     
-    # Calculate a recommendation score based on similarity (cosine similarity)
-    for i in similar_movies:
-        recommended_movie_title = movie_titles[i[0]]
-        movie_description = movie_overviews_orig[i[0]]
-        recommended_movies.append({'title': recommended_movie_title, 'description': movie_description,'movie_id': movie_id[i[0]], 'score':i[1]})
-
-    return recommended_movies
+'''
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
