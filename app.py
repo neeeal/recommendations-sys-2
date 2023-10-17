@@ -24,6 +24,7 @@ with db.cursor() as cursor:
     data = cursor.fetchall()
 
     movie_overviews_orig = [row['overview'] for row in data]
+    movie_id = [row['movie_id'] for row in data]
     movie_overviews = [row['overview'] for row in data]
     
     movie_titles = [row['names'] for row in data]  # Change 'names' to 'titl
@@ -50,10 +51,23 @@ def recommend_mysql_movies():
     if request.method == 'POST':
         data = request.get_json()
         movie_title = data['movie_title']
-        
+        movie_id = data['movie_id']
+
+        # Assuming you have a valid user ID and movie ID to insert
+        with db.cursor() as cursor:
+            try:
+                # Correct the SQL query and placeholders for user ID and movie ID
+                cursor.execute('INSERT INTO WatchedMovies (UserID, movie_id) VALUES (%s, %s)', (1, movie_id))
+                db.commit()  # Commit the transaction
+            except Exception as e:
+                return jsonify({'message': 'Error inserting watched movie.'}), 500
+
         recommendations = get_movie_recommendations(movie_title, cosine_sim)
-        
-        return jsonify(recommendations)
+
+        if recommendations:
+            return jsonify([{'message': 'Successfully saved to watched history.'},{'data': recommendations}])
+        else:
+            return jsonify({'message': 'No recommendations found.'}), 404
     
     if request.method == 'GET':
         
@@ -64,14 +78,13 @@ def recommend_mysql_movies():
             # Fetch all the movie records
             data = cursor.fetchall()
 
-        # Convert the MySQL result to a list of dictionaries
-        movies = [{'title': row['names'], 'description': row['overview'],  'date': row['date_x'],  'genre': row['genre']} for row in data]
+        movies = [{'movie_id':row['movie_id'],'title': row['names'], 'description': row['overview'],  'date': row['date_x'],  'genre': row['genre']} for row in data]
 
         return jsonify(movies)
             
 
 # Function to get movie recommendations
-def get_movie_recommendations(movie_title, similarity_matrix, num_recommendations=20):
+def get_movie_recommendations( movie_title, similarity_matrix, num_recommendations=20):
     movie_idx = movie_titles.index(movie_title)
     similar_movies = list(enumerate(similarity_matrix[movie_idx]))
     similar_movies = sorted(similar_movies, key=lambda x: x[1], reverse=True)
@@ -82,7 +95,8 @@ def get_movie_recommendations(movie_title, similarity_matrix, num_recommendation
     for i in similar_movies:
         recommended_movie_title = movie_titles[i[0]]
         movie_description = movie_overviews_orig[i[0]]
-        recommended_movies.append({'title': recommended_movie_title, 'description': movie_description, 'score':i[1]})
+        recommended_movies.append({'title': recommended_movie_title, 'description': movie_description,'movie_id': movie_id[i[0]], 'score':i[1]})
+
     return recommended_movies
 
 if __name__ == '__main__':
