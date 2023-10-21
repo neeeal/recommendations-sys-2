@@ -11,10 +11,10 @@ CORS(app)
 
 # MySQL configuration
 db = pymysql.connect(
-    host='localhost',
-    user='root',
-    password='',
-    db='movie_sys',
+    host='mysql5049.site4now.net',
+    user='aa0682_movies',
+    password='Password1234.',
+    db='db_aa0682_movies',
     cursorclass=pymysql.cursors.DictCursor  
 )
 
