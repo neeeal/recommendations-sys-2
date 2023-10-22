@@ -5,6 +5,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@2.x.x/dist/alpine.js"></script>
 </head>
 <body>
+    <?php echo(1+1); ?>
     <!-- Fetch and display using Alpine.js -->
     <div x-data="{
         selectedMovie:null,
