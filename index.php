@@ -12,7 +12,7 @@
         movie: null,
         movieTitle: '',
         async getMovies() {
-            const response = await fetch('http://127.0.0.1:5000/movies', {
+            const response = await fetch('https://flask-production-2296.up.railway.app/movies', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -24,7 +24,7 @@
         async getRecommendations(title,id) {
             console.log(id,'fds', title)
             if (title) {
-                const response = await fetch('http://127.0.0.1:5000/movies', {
+                const response = await fetch('https://flask-production-2296.up.railway.app/movies', {
                     method: 'POST',
                     body: JSON.stringify({ 
                         movie_title: title,
