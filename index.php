@@ -12,7 +12,7 @@
         movie: null,
         movieTitle: '',
         async getMovies() {
-            const response = await fetch('https://flask-production-2296.up.railway.app/movies', {
+            const response = await fetch('http://127.0.0.1:5000/movies', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -24,7 +24,7 @@
         async getRecommendations(title,id) {
             console.log(id,'fds', title)
             if (title) {
-                const response = await fetch('https://flask-production-2296.up.railway.app/movies', {
+                const response = await fetch('http://127.0.0.1:5000/movies', {
                     method: 'POST',
                     body: JSON.stringify({ 
                         movie_title: title,
@@ -37,24 +37,12 @@
                
                 const json = await response.json();
                 this.movie = json.data;
-                this.selectedMovie=json.movie;
+                this.selectedMovie=json.data[0];
             }
-        },
-        async search(title){
-            const response = await fetch(`https://flask-production-2296.up.railway.app/movies/${title}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                });
-               
-                const json = await response.json();
-                this.movie = json;
-         
         }
     }" x-init="getMovies()">
-        <input x-model="movieTitle" type="text" placeholder="Enter movie title">
-        <button @click="search(movieTitle);selectedMovie=null">Search na di maganda</button>
+        <!-- <input x-model="movieTitle" type="text" placeholder="Enter movie title">
+        <button @click="search(movieTitle);selectedMovie=null">Search na di maganda</button> -->
 
         <template x-if="selectedMovie != null">
             <div>
